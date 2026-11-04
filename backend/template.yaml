@@ -6,6 +6,10 @@ Parameters:
   BedrockModelId:
     Type: String
     Default: us.amazon.nova-2-lite-v1:0
+  FrontendUrl:
+    Type: String
+    Default: ""
+    Description: (Opcional) URL del frontend; las URLs de las etiquetas redirigen ahí
   AlertEmail:
     Type: String
     Default: ""
@@ -116,6 +120,9 @@ Resources:
       Handler: web.handler
       MemorySize: 128
       Timeout: 5
+      Environment:
+        Variables:
+          FRONTEND_URL: !Ref FrontendUrl
       Events:
         Root:
           Type: HttpApi

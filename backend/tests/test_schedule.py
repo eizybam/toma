@@ -80,3 +80,12 @@ def test_missed_after_uses_window_or_demo_override():
     demo = {"windowMin": 1, "dueAt": at(12, 0).replace(second=15).isoformat()}
     assert missed_after(demo, "12:00", at(12, 0)) == at(12, 0).replace(second=15)
     assert missed_after(demo, "12:00", at(12, 0, day=5)) == at(12, 1, day=5)
+
+
+def test_web_redirect_keeps_path_and_query(monkeypatch):
+    import web
+
+    monkeypatch.setattr(web, "FRONTEND_URL", "https://example.cloudfront.net")
+    res = web.handler({"rawPath": "/t/toma-demo-1", "rawQueryString": "c=1F4"}, None)
+    assert res["statusCode"] == 302
+    assert res["headers"]["location"] == "https://example.cloudfront.net/t/toma-demo-1?c=1F4"
