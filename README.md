@@ -76,9 +76,7 @@ Single DynamoDB table, `pk` / `sk`:
 
 ## Team
 
-| Area | Owner |
-|---|---|
-| Backend, AWS, NFC | |
-| Frontend | |
-| Documentation | |
-| Pitch and demo | |
+Ian Navarro
+Diego Sanchez
+Javier Diaz
+Alonso Astudillo
