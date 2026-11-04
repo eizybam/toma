@@ -63,3 +63,10 @@ def test_adherence_counts_only_closed_slots():
 
 def test_unknown_route_returns_404():
     assert api.handler({"routeKey": "GET /nope"}, None)["statusCode"] == 404
+
+
+@pytest.mark.parametrize("code,expected", [("1F4", 500), ("0000a3", 163), ("", None), ("xyz", None), ("123456789", None)])
+def test_hex_counter(code, expected):
+    from tap_codes import decode_hex_counter
+
+    assert decode_hex_counter(code) == expected

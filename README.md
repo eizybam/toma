@@ -28,6 +28,9 @@ EventBridge Scheduler (every minute) ──► Lambda (checker) ──► Dynamo
 
 Tags are ST25TV02KC (ISO 15693). With augmented NDEF the chip appends a tap counter to the URL;
 the backend rejects counters it has already seen, so copied URLs or cloned tags cannot fake a dose.
+The ST25 decoder is proprietary and is not part of this repository: it lives in
+`backend/src/tap_codes_private.py` (git-ignored) and is bundled only when deploying from the owner's
+machine. Without it, tags use the public `hex` scheme.
 
 ## Repository
 

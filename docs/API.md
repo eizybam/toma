@@ -35,7 +35,14 @@ Request:
 { "tagId": "toma-demo-1", "ctr": "0000A3" }
 ```
 
-`ctr` is optional (hex string).
+`ctr` is optional. It is decoded according to the tag's `codeScheme`:
+
+| codeScheme | Format | Use |
+|---|---|---|
+| `hex` (default) | 1–8 hex digits | Simulated tags and the demo |
+| `st25` | ST25TV02KC unique tap code | Real tags; decoder deployed privately |
+
+Each accepted code must be greater than the last one seen for that tag, otherwise `409 replay`.
 
 Response `200` — `status` drives the UI:
 
@@ -64,7 +71,10 @@ Always present: `patientId`, `patientName`, `medId`, `medName`, `dose`, `slot`, 
 }
 ```
 
-Errors: `400 missing_tag`, `404 unknown_tag`, `409 replay` (copied URL or cloned tag).
+Errors: `400 missing_tag`, `400 bad_ctr`, `404 unknown_tag`, `409 replay` (copied URL or cloned tag).
+
+To simulate a cloned tag, send a fresh hex code such as `Date.now().toString(16)`, then send the
+exact same body again; the second request returns `409 replay`.
 
 ### `GET /patients/{pid}`
 
@@ -111,7 +121,7 @@ Same shape as above, with `adherence.days` covering `days` (1–30).
 ### `POST /patients/{pid}/meds`
 
 ```json
-{ "name": "Losartán", "dose": "50 mg", "times": ["09:00", "21:00"], "windowMin": 30, "tagId": "toma-abc", "notes": "" }
+{ "name": "Losartán", "dose": "50 mg", "times": ["09:00", "21:00"], "windowMin": 30, "tagId": "toma-abc", "codeScheme": "hex", "notes": "" }
 ```
 
 `tagId` is optional; one is generated if omitted. Reusing a `tagId` rebinds the tag. `201` returns the medication.

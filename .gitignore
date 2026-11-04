@@ -9,3 +9,6 @@ dist/
 .env.*
 !.env.example
 .DS_Store
+
+# Proprietary tap-code decoder, deployed from the owner machine only
+backend/src/tap_codes_private.py
