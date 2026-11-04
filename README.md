@@ -76,7 +76,7 @@ Single DynamoDB table, `pk` / `sk`:
 
 ## Team
 
-Ian Navarro
-Diego Sanchez
-Javier Diaz
-Alonso Astudillo
+- Ian Navarro
+- Diego Sanchez
+- Javier Diaz
+- Alonso Astudillo
