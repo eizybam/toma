@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Toma - registro de dosis con NFC y avisos de dosis olvidadas
+
+Parameters:
+  BedrockModelId:
+    Type: String
+    Default: us.amazon.nova-2-lite-v1:0
+  AlertEmail:
+    Type: String
+    Default: ""
+    Description: (Opcional) correo que recibe los avisos de dosis olvidada
+
+Conditions:
+  HasAlertEmail: !Not [!Equals [!Ref AlertEmail, ""]]
+
+Globals:
+  Function:
+    Runtime: python3.13
+    Architectures: [arm64]
+    MemorySize: 256
+    Timeout: 30
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref TomaTable
+        ALERTS_TOPIC_ARN: !Ref AlertsTopic
+        BEDROCK_MODEL_ID: !Ref BedrockModelId
+
+Resources:
+  TomaTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: pk, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+      KeySchema:
+        - { AttributeName: pk, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+      SSESpecification:
+        SSEEnabled: true
+
+  AlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: toma-alertas
+      KmsMasterKeyId: alias/aws/sns
+
+  AlertEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasAlertEmail
+    Properties:
+      TopicArn: !Ref AlertsTopic
+      Protocol: email
+      Endpoint: !Ref AlertEmail
+
+  TomaHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: ["*"]
+        AllowMethods: [GET, POST, DELETE, OPTIONS]
+        AllowHeaders: [content-type]
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 50
+        ThrottlingRateLimit: 20
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: api.handler
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref TomaTable }
+        - SNSPublishMessagePolicy: { TopicName: !GetAtt AlertsTopic.TopicName }
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel]
+              Resource:
+                - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/${BedrockModelId}
+                - arn:aws:bedrock:*::foundation-model/*
+      Events:
+        Tap:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: POST, Path: "/tap" }
+        NewPatient:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: POST, Path: "/patients" }
+        GetPatient:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: GET, Path: "/patients/{pid}" }
+        History:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: GET, Path: "/patients/{pid}/history" }
+        NewMed:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: POST, Path: "/patients/{pid}/meds" }
+        DelMed:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: DELETE, Path: "/patients/{pid}/meds/{mid}" }
+        Parse:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: POST, Path: "/prescriptions/parse" }
+        Seed:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: POST, Path: "/demo/seed" }
+
+  CheckerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: checker.handler
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref TomaTable }
+        - SNSPublishMessagePolicy: { TopicName: !GetAtt AlertsTopic.TopicName }
+      Events:
+        EveryMinute:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: rate(1 minute)
+            RetryPolicy: { MaximumRetryAttempts: 0 }
+
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${TomaHttpApi}.execute-api.${AWS::Region}.amazonaws.com
+  TableName:
+    Value: !Ref TomaTable
+  AlertsTopicArn:
+    Value: !Ref AlertsTopic
