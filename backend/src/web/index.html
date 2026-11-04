@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F1E7">
+<title>Toma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F6F1E7;
+    --card: #FFFDF8;
+    --ink: #1F2A24;
+    --muted: #5B665F;
+    --line: #E4DCCB;
+    --green: #1E6B4E;
+    --green-soft: #DCEFE4;
+    --amber: #9A5B00;
+    --amber-soft: #FBEBCF;
+    --red: #A3322A;
+    --red-soft: #F7DEDA;
+    --blue-soft: #E3ECF4;
+    --radius: 20px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); }
+  body { font: 17px/1.5 Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  h1, h2, .serif { font-family: Fraunces, Georgia, serif; font-weight: 700; letter-spacing: -0.01em; }
+  button, input { font: inherit; }
+  a { color: var(--green); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: Fraunces, serif; font-weight: 700; font-size: 22px; }
+  .brand i { width: 14px; height: 14px; border-radius: 50%; background: var(--green); display: inline-block; }
+
+  /* Tap page */
+  .tap { min-height: 100dvh; display: grid; grid-template-rows: auto 1fr auto; padding: 24px 20px calc(24px + env(safe-area-inset-bottom)); }
+  .tap main { display: grid; align-content: center; justify-items: center; text-align: center; gap: 18px; }
+  .seal { width: 168px; height: 168px; border-radius: 50%; display: grid; place-items: center; }
+  .seal svg { width: 84px; height: 84px; }
+  .tap h1 { font-size: clamp(40px, 11vw, 64px); line-height: 1.05; margin: 0; }
+  .tap .med { font-size: clamp(24px, 6.5vw, 32px); font-weight: 600; }
+  .tap .sub { font-size: 22px; color: var(--muted); max-width: 22ch; }
+  .tap footer { text-align: center; color: var(--muted); font-size: 16px; }
+  .ok .seal { background: var(--green-soft); color: var(--green); }
+  .warn .seal { background: var(--amber-soft); color: var(--amber); }
+  .bad .seal { background: var(--red-soft); color: var(--red); }
+  .wait .seal { background: var(--blue-soft); color: #2C5274; }
+  .ok h1 { color: var(--green); } .warn h1 { color: var(--amber); } .bad h1 { color: var(--red); }
+  .pulse { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { transform: scale(.94); opacity: .7; } }
+  .pop { animation: pop .5s cubic-bezier(.2, 1.4, .4, 1) both; }
+  @keyframes pop { from { transform: scale(.4); opacity: 0; } }
+  .draw path { stroke-dasharray: 60; stroke-dashoffset: 60; animation: draw .5s .25s ease-out forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .shake { animation: shake .5s ease-in-out both; }
+  @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
+  /* Dashboard */
+  header.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .live { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .live b { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  .hero { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: end; margin-bottom: 24px; }
+  .hero h1 { font-size: clamp(34px, 7vw, 52px); margin: 0; line-height: 1.05; }
+  .hero p { margin: 6px 0 0; color: var(--muted); }
+  .score { text-align: right; }
+  .score .n { font-family: Fraunces, serif; font-size: 56px; line-height: 1; color: var(--green); }
+  .score small { color: var(--muted); }
+  .grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+  .card h2 { font-size: 22px; margin: 0 0 14px; }
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .timeline li { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+  .timeline li:first-child { border-top: 0; }
+  .time { font-family: Fraunces, serif; font-size: 22px; }
+  .pill { font-size: 14px; font-weight: 600; padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+  .s-taken { background: var(--green-soft); color: var(--green); }
+  .s-due { background: var(--amber-soft); color: var(--amber); }
+  .s-missed { background: var(--red-soft); color: var(--red); }
+  .s-upcoming { background: var(--blue-soft); color: #2C5274; }
+  .alert { padding: 12px 14px; border-radius: 14px; margin-bottom: 10px; }
+  .alert.missed { background: var(--red-soft); }
+  .alert.duplicate { background: var(--amber-soft); }
+  .alert small { display: block; color: var(--muted); margin-top: 2px; }
+  .new { animation: slide .5s ease-out both; }
+  @keyframes slide { from { transform: translateY(-8px); opacity: 0; background: #fff3; } }
+  .bars { display: flex; gap: 8px; align-items: end; height: 120px; }
+  .bars div { flex: 1; display: grid; gap: 6px; justify-items: center; font-size: 13px; color: var(--muted); }
+  .bars span { width: 100%; border-radius: 8px 8px 4px 4px; background: var(--green); min-height: 4px; }
+  .bars span.none { background: var(--line); }
+  .meds li { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .meds li:first-child { border-top: 0; }
+  .meds code { font-size: 13px; color: var(--muted); }
+  .empty { color: var(--muted); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 20px; border-radius: 14px; border: 0; background: var(--green); color: #fff; font-weight: 600; cursor: pointer; text-decoration: none; }
+  .btn.ghost { background: transparent; color: var(--green); border: 1.5px solid var(--green); }
+  .btn:disabled { opacity: .55; cursor: progress; }
+  .drop { display: grid; place-items: center; gap: 8px; text-align: center; border: 2px dashed var(--line); border-radius: 16px; padding: 24px; cursor: pointer; }
+  .drop:hover { border-color: var(--green); }
+  .parsed li { padding: 10px 0; border-top: 1px solid var(--line); }
+  .stack > * + * { margin-top: 16px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .note { color: var(--muted); font-size: 15px; }
+  .out { margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--paper); font-size: 15px; }
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+    .hero { grid-template-columns: 1fr; }
+    .score { text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .draw path { stroke-dashoffset: 0; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const API = "";
+const app = document.getElementById("app");
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const hhmm = (iso) => iso ? new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", timeZone: "America/Mexico_City" }) : "";
+
+async function api(path, options = {}) {
+  const res = await fetch(API + path, { headers: { "content-type": "application/json" }, ...options });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+
+const ICONS = {
+  check: '<svg class="draw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>',
+  warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 7v6"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="10"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 2"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  nfc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 8.3a6 6 0 0 1 0 7.4M9.5 6a10 10 0 0 1 0 12M13 4a14 14 0 0 1 0 16"/></svg>',
+};
+
+function tapView(kind, icon, title, med, sub, anim = "pop") {
+  app.innerHTML = `
+    <div class="tap ${kind}">
+      <div class="brand"><i></i>Toma</div>
+      <main>
+        <div class="seal ${anim}">${ICONS[icon]}</div>
+        <h1>${title}</h1>
+        ${med ? `<div class="med">${med}</div>` : ""}
+        ${sub ? `<div class="sub">${sub}</div>` : ""}
+      </main>
+      <footer>Puedes cerrar esta pantalla.</footer>
+    </div>`;
+}
+
+async function tapPage(tagId) {
+  tapView("wait", "nfc", "Registrando…", "", "", "pulse");
+  const ctr = new URLSearchParams(location.search).get("c");
+  const { status, data } = await api("/tap", { method: "POST", body: JSON.stringify({ tagId, ctr }) });
+  const med = data.medName ? `${esc(data.medName)} · ${esc(data.dose)}` : "";
+  if (navigator.vibrate) navigator.vibrate(data.status === "recorded" ? 80 : [120, 80, 120]);
+
+  if (data.status === "recorded") {
+    const late = data.minutesLate > 0 && !data.onTime ? `Con ${data.minutesLate} min de retraso. ` : "";
+    return tapView("ok", "check", "¡Listo!", med, `${late}Tu siguiente dosis: <b>${esc(data.nextDose)}</b>`);
+  }
+  if (data.status === "duplicate") {
+    return tapView("warn", "warn", "¡Espera!", med, `Ya tomaste esta dosis hace ${data.minutesAgo} min. No la tomes otra vez.`, "shake");
+  }
+  if (data.status === "early") {
+    return tapView("wait", "clock", "Todavía no toca", med, `Tu dosis es a las <b>${esc(data.slot)}</b>.`);
+  }
+  if (status === 409) {
+    return tapView("bad", "x", "Etiqueta no válida", "", "Este toque ya se usó. La etiqueta podría estar copiada.", "shake");
+  }
+  if (status === 404) {
+    return tapView("bad", "x", "Etiqueta sin registrar", "", "Pídele a tu familiar que la dé de alta.");
+  }
+  tapView("bad", "x", "No se pudo registrar", "", "Revisa tu conexión e inténtalo otra vez.");
+}
+
+const STATUS = { taken: "Tomada", due: "Ahora", missed: "Olvidada", upcoming: "Pendiente" };
+let seenAlerts = null;
+
+function renderDashboard(pid, d) {
+  const alertKeys = d.alerts.map((a) => a.sk);
+  const fresh = seenAlerts ? new Set(alertKeys.filter((k) => !seenAlerts.has(k))) : new Set();
+  seenAlerts = new Set(alertKeys);
+  const pct = d.adherence.pct;
+  const days = d.adherence.days;
+
+  document.getElementById("hero").innerHTML = `
+    <div>
+      <h1>${esc(d.profile.name)}</h1>
+      <p>Cuida: ${esc(d.profile.caregiverName) || "—"}</p>
+    </div>
+    <div class="score"><div class="n">${pct ?? "—"}${pct == null ? "" : "%"}</div><small>apego a su tratamiento, 7 días</small></div>`;
+
+  document.getElementById("today").innerHTML = d.today.length ? d.today.map((s) => `
+      <li>
+        <span class="time">${esc(s.slot)}</span>
+        <span><b>${esc(s.medName)}</b> · ${esc(s.dose)}${s.takenAt ? `<br><small class="note">Tomada a las ${hhmm(s.takenAt)}</small>` : ""}</span>
+        <span class="pill s-${s.status}">${STATUS[s.status]}</span>
+      </li>`).join("") : `<li class="empty">Sin dosis programadas hoy.</li>`;
+
+  document.getElementById("alerts").innerHTML = d.alerts.length ? d.alerts.slice(0, 6).map((a) => `
+      <div class="alert ${a.type} ${fresh.has(a.sk) ? "new" : ""}">
+        ${esc(a.message)}<small>${a.type === "missed" ? "Dosis olvidada" : "Posible dosis doble"} · ${hhmm(a.createdAt)}</small>
+      </div>`).join("") : `<p class="empty">Todo en orden.</p>`;
+
+  document.getElementById("bars").innerHTML = days.map((x) => `
+      <div><span class="${x.pct == null ? "none" : ""}" style="height:${x.pct == null ? 4 : Math.max(6, x.pct)}%"></span>${new Date(x.date + "T12:00").toLocaleDateString("es-MX", { weekday: "narrow" })}</div>`).join("");
+
+  document.getElementById("meds").innerHTML = d.meds.length ? d.meds.map((m) => `
+      <li><span><b>${esc(m.name)}</b> · ${esc(m.dose)}<br><small class="note">${m.times.map(esc).join(" · ")}</small></span><code>${esc(m.tagId)}</code></li>`).join("") : `<li class="empty">Aún no hay medicinas.</li>`;
+}
+
+async function dashboardPage(pid) {
+  app.innerHTML = `
+    <div class="wrap">
+      <header class="top"><div class="brand"><i></i>Toma</div><div class="live"><b></b>En vivo</div></header>
+      <section class="hero" id="hero"><div><h1 class="serif">Cargando…</h1></div></section>
+      <div class="grid">
+        <div class="stack">
+          <section class="card"><h2>Hoy</h2><ul class="timeline" id="today"></ul></section>
+          <section class="card"><h2>Medicinas</h2><ul class="meds timeline" id="meds"></ul></section>
+        </div>
+        <div class="stack">
+          <section class="card"><h2>Avisos</h2><div id="alerts"></div></section>
+          <section class="card"><h2>Últimos 7 días</h2><div class="bars" id="bars"></div></section>
+          <section class="card"><h2>Nueva receta</h2>
+            <label class="drop" for="rx">
+              <span class="serif" style="font-size:20px">Toma una foto de la receta</span>
+              <span class="note">La leemos y armamos los horarios por ti.</span>
+            </label>
+            <input id="rx" type="file" accept="image/*" capture="environment" hidden>
+            <div id="rxOut"></div>
+          </section>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById("rx").addEventListener("change", (e) => e.target.files[0] && uploadPrescription(pid, e.target.files[0]));
+
+  const refresh = async () => {
+    const { ok, data } = await api(`/patients/${encodeURIComponent(pid)}`);
+    if (ok) renderDashboard(pid, data);
+    else document.getElementById("hero").innerHTML = `<h1>Paciente no encontrado</h1>`;
+  };
+  await refresh();
+  setInterval(refresh, 5000);
+}
+
+function resizeImage(file, max = 1600) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function uploadPrescription(pid, file) {
+  const out = document.getElementById("rxOut");
+  out.innerHTML = `<p class="out pulse">Leyendo la receta…</p>`;
+  const imageBase64 = await resizeImage(file);
+  const { ok, data } = await api("/prescriptions/parse", { method: "POST", body: JSON.stringify({ imageBase64, mediaType: "image/jpeg" }) });
+  if (!ok || !data.medications?.length) {
+    out.innerHTML = `<p class="out">No pudimos leer la receta. ${esc(data.notes || data.message || "")}</p>`;
+    return;
+  }
+  out.innerHTML = `
+    <ul class="parsed timeline">${data.medications.map((m) => `
+      <li><b>${esc(m.name)}</b> · ${esc(m.dose)}<br><small class="note">${m.times.length ? m.times.map(esc).join(" · ") : "Sin horario"}${m.notes ? " · " + esc(m.notes) : ""}</small></li>`).join("")}
+    </ul>
+    <button class="btn" id="rxSave">Agregar al tratamiento</button>`;
+  document.getElementById("rxSave").onclick = async (ev) => {
+    ev.target.disabled = true;
+    for (const m of data.medications.filter((x) => x.times.length)) {
+      await api(`/patients/${encodeURIComponent(pid)}/meds`, { method: "POST", body: JSON.stringify({ name: m.name, dose: m.dose || "", times: m.times, notes: m.notes || "" }) });
+    }
+    out.innerHTML = `<p class="out">Listo, se agregaron ${data.medications.length} medicinas.</p>`;
+  };
+}
+
+function demoPage() {
+  app.innerHTML = `
+    <div class="wrap stack">
+      <div class="brand"><i></i>Toma · demo</div>
+      <section class="card stack">
+        <h2>1. Reiniciar la demo</h2>
+        <p class="note">Crea a Doña Rosa con Metformina (toca ahora) y Losartán (se vuelve olvidada en ~2 min y manda el aviso).</p>
+        <button class="btn" id="seed">Reiniciar</button>
+        <div id="seedOut"></div>
+      </section>
+      <section class="card stack">
+        <h2>2. Abrir</h2>
+        <div class="row">
+          <a class="btn" href="/p/demo">Panel del cuidador</a>
+          <a class="btn ghost" href="/t/toma-demo-1">Toque: Metformina</a>
+          <a class="btn ghost" href="/t/toma-demo-2">Toque: Losartán</a>
+        </div>
+      </section>
+      <section class="card stack">
+        <h2>3. Simular etiqueta clonada</h2>
+        <p class="note">El chip genera un código nuevo en cada toque. Una copia repite el código y se rechaza.</p>
+        <button class="btn ghost" id="clone">Simular</button>
+        <div id="cloneOut"></div>
+      </section>
+    </div>`;
+
+  document.getElementById("seed").onclick = async (ev) => {
+    ev.target.disabled = true;
+    const { data } = await api("/demo/seed", { method: "POST", body: "{}" });
+    document.getElementById("seedOut").innerHTML = `<p class="out">${esc(data.info)}</p>`;
+    ev.target.disabled = false;
+  };
+  document.getElementById("clone").onclick = async () => {
+    const body = JSON.stringify({ tagId: "toma-demo-1", ctr: Date.now().toString(16).slice(-8) });
+    const first = await api("/tap", { method: "POST", body });
+    const copy = await api("/tap", { method: "POST", body });
+    document.getElementById("cloneOut").innerHTML = `
+      <p class="out">Toque original: <b>${esc(first.data.status || first.data.error)}</b><br>
+      Toque copiado: <b>${copy.status === 409 ? "rechazado (etiqueta clonada)" : esc(copy.data.status || copy.data.error)}</b></p>`;
+  };
+}
+
+const [, section, id] = location.pathname.split("/");
+if (section === "t" && id) tapPage(decodeURIComponent(id));
+else if (section === "p" && id) dashboardPage(decodeURIComponent(id));
+else demoPage();
+</script>
+</body>
+</html>
