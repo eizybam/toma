@@ -3,7 +3,7 @@
     pip install diagrams        # also needs Graphviz (`dot`) on the PATH
     python architecture.py      # writes architecture.png
 
-Solid lines are deployed today (backend/template.yaml). Dashed lines are planned.
+Everything shown is deployed (backend/template.yaml and infra/frontend.yaml).
 """
 from diagrams import Cluster, Diagram, Edge
 from diagrams.aws.compute import Lambda
@@ -16,7 +16,6 @@ from diagrams.generic.device import Mobile
 from diagrams.onprem.client import User
 
 GRAPH = {"fontsize": "20", "pad": "0.5", "nodesep": "1.0", "ranksep": "1.4", "splines": "spline"}
-PLANNED = {"style": "dashed", "color": "gray"}
 
 with Diagram(
     "Toma - architecture (us-east-2)",
@@ -29,7 +28,7 @@ with Diagram(
     patient = Mobile("Patient phone\n(taps NFC tag ST25TV02KC)")
     caregiver = User("Caregiver\n(dashboard + alerts)")
 
-    with Cluster("Planned frontend (Vite + React)"):
+    with Cluster("Frontend (Vite + React)"):
         cdn = CloudFront("CloudFront")
         site = S3("Static site")
 
@@ -60,7 +59,8 @@ with Diagram(
     checker >> Edge(label="find missed slots") >> table
     checker >> Edge(label="missed dose alert") >> topic
 
-    topic >> Edge(label="email (optional AlertEmail)") >> caregiver
+    topic >> Edge(label="SMS + email") >> caregiver
 
-    site >> Edge(**PLANNED) >> cdn
-    cdn >> Edge(label="planned", **PLANNED) >> api_gw
+    site >> cdn
+    api_gw >> Edge(label="302 redirect") >> cdn
+    cdn >> Edge(label="fetch API") >> api_gw

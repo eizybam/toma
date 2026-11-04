@@ -41,7 +41,7 @@
 - ✅ R3.4 THE SYSTEM SHALL ignore slots earlier than the medication's creation time.
 - ✅ R3.5 IF the dose is taken before the window closes, THE SYSTEM SHALL NOT send an alert (the checker finds the dose and skips the slot).
 - ⚠️ R3.6 Delivery today is the SNS topic `toma-alertas` with an optional email subscription (`AlertEmail` parameter). The caregiver's phone number is stored but not used.
-- 🔜 R3.7 THE SYSTEM SHALL send the alert as an SMS to the caregiver's phone, as in the original idea.
+- ✅ R3.7 THE SYSTEM SHALL send the alert as an SMS to the caregiver's phone, as in the original idea.
 
 ### R4 — Tap authenticity (anti-spoofing)
 - ✅ R4.1 WHEN a tap includes `ctr`, THE SYSTEM SHALL decode it with the scheme configured on the tag (`hex` or `st25`) and accept it only if it is strictly greater than the last counter seen for that tag.
@@ -55,7 +55,7 @@
 - ✅ R5.1 WHEN a photo is submitted to `POST /prescriptions/parse`, THE SYSTEM SHALL read it with Amazon Bedrock (Nova 2 Lite) and return each medication's name, dose, times, duration and notes.
 - ✅ R5.2 IF the recipe only says "every N hours", THE SYSTEM SHALL derive the times. IF a field is missing it SHALL be `null` (no invented medicines). IF the image is not a readable prescription, THE SYSTEM SHALL return `legible: false`.
 - ✅ R5.3 THE web app SHALL resize the photo to about 1600 px, show a loading state (3–8 s), and show the parsed medicines for the caregiver to review before pressing "Agregar al tratamiento".
-- 🔜 R5.3b THE review step SHALL let the caregiver edit names and times before saving.
+- ✅ R5.3b THE review step SHALL let the caregiver edit names and times before saving.
 - ✅ R5.4 WHEN the request has `save: true` and a `patientId`, THE SYSTEM SHALL create the medications that have times.
 - ✅ R5.5 THE SYSTEM SHALL NOT store the prescription image; it is sent to the model and discarded.
 
@@ -65,7 +65,7 @@
 - ✅ R6.3 THE dashboard SHALL show an alerts feed (missed and duplicate, the six newest, new ones highlighted) and the medicine list with each tag id. The API also returns the last 30 doses, which the page does not display yet.
 - ✅ R6.4 THE dashboard SHALL refresh every 5 seconds so a tap appears live.
 - ✅ R6.5 THE API SHALL let a caller create a patient, add a medication (times, tolerance window 1–240 min, optional tag id and code scheme) and delete one, which unbinds its tag. Reusing a tag id rebinds the tag.
-- ⚠️ R6.5b In the web app, medicines can currently be added only through the prescription flow, and the medicine list is read-only. 🔜 THE dashboard SHALL offer forms to add a medicine by hand (with tag id and code scheme), delete it, and create a patient.
+- ✅ R6.5b THE dashboard SHALL offer forms to add a medicine by hand and delete it. 🔜 Creating a patient from the UI.
 - 🔜 R6.6 THE caregiver SHALL sign in before seeing a patient's data.
 
 ### R7 — Demo support
@@ -100,4 +100,4 @@
 2. **Counter not mandatory (R4.5).** A copied URL without `c=` would still register a dose.
 3. **SMS to Mexico.** SNS SMS needs origination rules and may be sandboxed (verified numbers only). Email works today.
 4. **Open endpoints.** `POST /demo/seed`, patient data and CORS `*` are public. Fine for a demo, not for real patients.
-5. **Frontend.** The web app is served by a Lambda (`backend/src/web/index.html`). A standalone Vite + React app on S3 + CloudFront is planned; `frontend/` only has `.env.example` so far.
+5. **Frontend.** The Vite + React app in `frontend/` is hosted on S3 + CloudFront. Tag URLs on API Gateway redirect to it, so tags never need rewriting.

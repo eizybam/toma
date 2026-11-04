@@ -12,9 +12,9 @@ Serverless, in one SAM stack (`toma-backend`, region `us-east-2`). One HTTP API 
 | `WebFunction` | `web.handler` | Serves the single-page web app (tap page, dashboard, demo console) as HTML |
 | `CheckerFunction` | `checker.handler` | Runs every minute from EventBridge Scheduler; records missed doses and alerts |
 
-There is no server-side session and no separate frontend host yet: the NFC URL opens the page served by `WebFunction`, and that page calls the API with `fetch`.
+There is no server-side session. The NFC URL hits `WebFunction`, which redirects (302, keeping the query string) to the React frontend on CloudFront (`infra/frontend.yaml`); the frontend calls the API with `fetch`. Without `FrontendUrl`, `WebFunction` serves a bundled fallback page.
 
-See `architecture.md` and `architecture.png` for the diagram.
+See the diagram in the README; `architecture.py` renders a PNG version with the official AWS icons.
 
 ## 2. Repository layout
 
@@ -29,7 +29,7 @@ backend/
   src/web.py           serves src/web/index.html
   src/web/index.html   single-page app (tap page, dashboard, demo, prescription upload)
   tests/               pytest (schedule math, validation, counters)
-frontend/              planned Vite + React + TypeScript + Tailwind app (only .env.example so far)
+frontend/              Vite + React + TypeScript + Tailwind app (hosted on S3 + CloudFront)
 docs/                  API.md, UI_BRIEF.md
 ```
 
@@ -43,8 +43,8 @@ docs/                  API.md, UI_BRIEF.md
 | **EventBridge Scheduler** | `rate(1 minute)` → `checker`, no retries | ✅ |
 | **SNS** topic `toma-alertas` (KMS `alias/aws/sns`) | Caregiver alerts; optional email subscription via `AlertEmail` | ✅ |
 | **Bedrock** (`us.amazon.nova-2-lite-v1:0`, Converse API) | Reads prescription photos | ✅ |
-| **S3 + CloudFront** | Hosting for the standalone frontend | 🔜 |
-| **SNS SMS** | Text message to the caregiver's phone | 🔜 |
+| **S3 + CloudFront** | Hosting for the standalone frontend | ✅ |
+| **SNS SMS** | Text message to the caregiver's phone (sandbox, verified numbers) | ✅ |
 | **Cognito** (or equivalent) | Caregiver sign-in | 🔜 |
 
 ## 4. Data model (single table, `pk` / `sk`)
