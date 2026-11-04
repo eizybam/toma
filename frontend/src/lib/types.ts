@@ -34,12 +34,15 @@ export type Medication = {
   createdAt: string
 }
 
+export type CodeScheme = 'hex' | 'st25'
+
 export type NewMedication = {
   name: string
   dose?: string
   times: string[]
   windowMin?: number
   tagId?: string
+  codeScheme?: CodeScheme
   notes?: string
 }
 
@@ -112,7 +115,7 @@ export type ParsedPrescription = {
 export type DemoSeedOptions = {
   name?: string
   caregiverName?: string
-  missedInMinutes?: number
+  missedInSeconds?: number
 }
 
 export type DemoSeedResult = {

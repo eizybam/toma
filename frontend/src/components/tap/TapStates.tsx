@@ -107,6 +107,7 @@ function errorCopy(code: string): ErrorCopy {
     case 'unknown_med':
     case 'missing_tag':
     case 'no_schedule':
+    case 'scheme_unavailable':
       return {
         icon: CircleHelp,
         label: 'Etiqueta desconocida',

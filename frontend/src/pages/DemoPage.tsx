@@ -6,7 +6,7 @@ import { api, toApiError } from '@/lib/api'
 
 const TAGS = [
   { id: 'toma-demo-1', label: 'Metformina', hint: 'Toca ahora: registra la dosis.' },
-  { id: 'toma-demo-2', label: 'Losartán', hint: 'Si no la tocas, llega la alerta de dosis olvidada.' },
+  { id: 'toma-demo-2', label: 'Losartán', hint: 'Si no la tocas en 5 s, llega la alerta de dosis olvidada.' },
 ]
 
 type Status = { kind: 'idle' } | { kind: 'seeding' } | { kind: 'ready'; info: string } | { kind: 'error'; message: string }
@@ -31,7 +31,7 @@ export function DemoPage() {
       <header className="grid gap-2">
         <h1 className="text-4xl font-semibold">Ensayo de la demo</h1>
         <p className="text-lg text-ink-muted">
-          Reinicia a Doña Rosa con dos medicamentos. La Metformina toca ahora y el Losartán se vence en unos minutos.
+          Reinicia a Doña Rosa con dos medicamentos. La Metformina toca ahora y el Losartán se marca como olvidado a los pocos segundos.
         </p>
       </header>
 
