@@ -156,11 +156,11 @@ Takes 3–8 s; show a loading state.
 
 ### `POST /demo/seed`
 
-Resets patient `demo` with two medications. `toma-demo-1` is due now; `toma-demo-2` becomes
-overdue about 2 minutes later, which triggers the missed-dose alert if it is not tapped.
+Resets patient `demo` with two medications. `toma-demo-1` is due now; `toma-demo-2` is marked
+missed after `missedInSeconds` (default 15, range 5–25) and the alert is sent if it is not tapped.
 
 ```json
-{ "name": "Doña Rosa", "caregiverName": "Laura (hija)", "missedInMinutes": 1 }
+{ "name": "Doña Rosa", "caregiverName": "Laura (hija)", "missedInSeconds": 15 }
 ```
 
 All fields are optional.

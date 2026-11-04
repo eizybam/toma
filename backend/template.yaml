@@ -70,9 +70,13 @@ Resources:
     Properties:
       CodeUri: src/
       Handler: api.handler
+      Environment:
+        Variables:
+          CHECKER_FUNCTION: !Ref CheckerFunction
       Policies:
         - DynamoDBCrudPolicy: { TableName: !Ref TomaTable }
         - SNSPublishMessagePolicy: { TopicName: !GetAtt AlertsTopic.TopicName }
+        - LambdaInvokePolicy: { FunctionName: !Ref CheckerFunction }
         - Statement:
             - Effect: Allow
               Action: [bedrock:InvokeModel]

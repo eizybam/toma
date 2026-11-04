@@ -70,3 +70,13 @@ def test_hex_counter(code, expected):
     from tap_codes import decode_hex_counter
 
     assert decode_hex_counter(code) == expected
+
+
+def test_missed_after_uses_window_or_demo_override():
+    from common import missed_after
+
+    med = {"windowMin": 30}
+    assert missed_after(med, "08:00", at(9, 0)) == at(8, 30)
+    demo = {"windowMin": 1, "dueAt": at(12, 0).replace(second=15).isoformat()}
+    assert missed_after(demo, "12:00", at(12, 0)) == at(12, 0).replace(second=15)
+    assert missed_after(demo, "12:00", at(12, 0, day=5)) == at(12, 1, day=5)

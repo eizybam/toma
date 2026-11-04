@@ -1,10 +1,13 @@
 """Scheduled every minute: records missed doses and notifies the caregiver."""
+import time
 from datetime import datetime
 
 from boto3.dynamodb.conditions import Attr
 from botocore.exceptions import ClientError
 
-from common import DEFAULT_WINDOW_MIN, TABLE, now_mx, publish_alert, slot_datetime
+from common import TABLE, missed_after, now_mx, publish_alert, slot_datetime
+
+MAX_DELAY_S = 25
 
 
 def _all_meds():
@@ -18,6 +21,9 @@ def _all_meds():
 
 
 def handler(event, context):
+    delay = int((event or {}).get("delaySeconds", 0))
+    if delay:
+        time.sleep(min(delay, MAX_DELAY_S))
     now = now_mx()
     today = now.strftime("%Y-%m-%d")
     sent = 0
@@ -25,12 +31,10 @@ def handler(event, context):
 
     for med in _all_meds():
         pk, mid = med["pk"], med["medId"]
-        window = int(med.get("windowMin", DEFAULT_WINDOW_MIN))
         created = datetime.fromisoformat(med["createdAt"])
 
         for slot in med.get("times", []):
-            due = slot_datetime(now, slot)
-            if due < created or (now - due).total_seconds() < window * 60:
+            if slot_datetime(now, slot) < created or now < missed_after(med, slot, now):
                 continue
             dose = TABLE.get_item(Key={"pk": pk, "sk": f"DOSE#{today}#{mid}#{slot}"}).get("Item")
             if dose:

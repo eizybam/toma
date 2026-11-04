@@ -25,6 +25,14 @@ def slot_datetime(day: datetime, slot: str) -> datetime:
     return day.replace(hour=hh, minute=mm, second=0, microsecond=0)
 
 
+def missed_after(med: dict, slot: str, day: datetime) -> datetime:
+    """Moment after which an untaken dose counts as missed. `dueAt` overrides it for demo meds."""
+    due_at = med.get("dueAt")
+    if due_at and due_at.startswith(day.strftime("%Y-%m-%d")):
+        return datetime.fromisoformat(due_at)
+    return slot_datetime(day, slot) + timedelta(minutes=int(med.get("windowMin", DEFAULT_WINDOW_MIN)))
+
+
 def closest_slot(times: list[str], when: datetime) -> tuple[str, int]:
     """Closest scheduled time to `when` and the offset in minutes (positive = late)."""
     best, best_diff = None, None

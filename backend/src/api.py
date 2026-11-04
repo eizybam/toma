@@ -14,6 +14,7 @@ from common import (
     DEFAULT_WINDOW_MIN,
     TABLE,
     closest_slot,
+    missed_after,
     now_mx,
     publish_alert,
     response,
@@ -22,6 +23,8 @@ from common import (
 from tap_codes import DECODERS, DEFAULT_SCHEME
 
 BEDROCK = boto3.client("bedrock-runtime")
+LAMBDA = boto3.client("lambda")
+CHECKER_FUNCTION = os.environ.get("CHECKER_FUNCTION", "")
 MODEL_ID = os.environ["BEDROCK_MODEL_ID"]
 TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 EARLY_LIMIT_MIN = 120
@@ -227,10 +230,8 @@ def _adherence(meds, doses, now, days):
         expected = taken = 0
         for m in meds:
             created = datetime.fromisoformat(m["createdAt"])
-            window = int(m.get("windowMin", DEFAULT_WINDOW_MIN))
             for t in m.get("times", []):
-                due = slot_datetime(day, t)
-                if due < created or due + timedelta(minutes=window) > now:
+                if slot_datetime(day, t) < created or missed_after(m, t, day) > now:
                     continue
                 expected += 1
                 taken += (date, m["medId"], t) in taken_keys
@@ -254,7 +255,6 @@ def get_patient(pid, days=7):
     taken_today = {(d["medId"], d["slot"]): d for d in doses if d["date"] == today}
     schedule = []
     for m in meds:
-        window = int(m.get("windowMin", DEFAULT_WINDOW_MIN))
         created = datetime.fromisoformat(m["createdAt"])
         for t in m.get("times", []):
             due = slot_datetime(now, t)
@@ -263,7 +263,7 @@ def get_patient(pid, days=7):
                 continue
             if d:
                 status = "taken"
-            elif now > due + timedelta(minutes=window):
+            elif now >= missed_after(m, t, now):
                 status = "missed"
             elif now >= due:
                 status = "due"
@@ -351,7 +351,7 @@ def parse_prescription(event):
 
 
 def seed_demo(event):
-    """Reset the demo patient with two meds; the second one becomes overdue in ~2 minutes."""
+    """Reset the demo patient: Metformina is due now and Losartán is missed after a few seconds."""
     for it in _patient_items(DEMO_PID):
         if it["sk"].startswith("MED#"):
             TABLE.delete_item(Key={"pk": f"TAG#{it['tagId']}", "sk": "TAG"})
@@ -364,15 +364,21 @@ def seed_demo(event):
         "caregiverName": data.get("caregiverName", "Laura (hija)"), "caregiverContact": data.get("caregiverContact", ""),
         "createdAt": (now - timedelta(days=7)).isoformat(),
     })
-    soon = (now + timedelta(minutes=int(data.get("missedInMinutes", 1)))).strftime("%H:%M")
+    missed_in = max(5, min(int(data.get("missedInSeconds", 15)), 25))
+    due_at = now + timedelta(seconds=missed_in)
     near = now.strftime("%H:%M")
     created_at = (now - timedelta(minutes=5)).isoformat()
     m1 = _put_med(DEMO_PID, {"name": "Metformina", "dose": "850 mg", "times": sorted({"08:00", near, "20:00"}),
                              "windowMin": 30, "tagId": "toma-demo-1"}, created_at)
-    m2 = _put_med(DEMO_PID, {"name": "Losartán", "dose": "50 mg", "times": [soon], "windowMin": 1,
+    m2 = _put_med(DEMO_PID, {"name": "Losartán", "dose": "50 mg", "times": [near], "windowMin": 1,
                              "tagId": "toma-demo-2"}, created_at)
+    m2["dueAt"] = due_at.isoformat()
+    TABLE.put_item(Item=m2)
+    if CHECKER_FUNCTION:
+        LAMBDA.invoke(FunctionName=CHECKER_FUNCTION, InvocationType="Event",
+                      Payload=json.dumps({"delaySeconds": missed_in + 1}).encode())
     return response(201, {"patientId": DEMO_PID, "meds": [m1, m2],
-                          "info": f"Toca toma-demo-1 para registrar. Si no tocas toma-demo-2, a las {soon} + 1 min llega el aviso."})
+                          "info": f"Toca toma-demo-1 para registrar. Si no tocas toma-demo-2, en {missed_in} s llega el aviso."})
 
 
 def handler(event, context):
