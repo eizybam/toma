@@ -105,6 +105,27 @@ Resources:
           Type: HttpApi
           Properties: { ApiId: !Ref TomaHttpApi, Method: POST, Path: "/demo/seed" }
 
+  WebFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: web.handler
+      MemorySize: 128
+      Timeout: 5
+      Events:
+        Root:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: GET, Path: "/" }
+        Demo:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: GET, Path: "/demo" }
+        TapPage:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: GET, Path: "/t/{tagId}" }
+        Dashboard:
+          Type: HttpApi
+          Properties: { ApiId: !Ref TomaHttpApi, Method: GET, Path: "/p/{pid}" }
+
   CheckerFunction:
     Type: AWS::Serverless::Function
     Properties:
