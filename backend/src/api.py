@@ -19,6 +19,7 @@ from common import (
     response,
     slot_datetime,
 )
+from tap_codes import DECODERS, DEFAULT_SCHEME
 
 BEDROCK = boto3.client("bedrock-runtime")
 MODEL_ID = os.environ["BEDROCK_MODEL_ID"]
@@ -83,13 +84,14 @@ def tap(event):
     if not tag:
         raise ApiError(404, "unknown_tag", "Esta etiqueta no está registrada")
 
-    # ST25TV02KC augmented NDEF appends a tap counter; a replayed URL repeats it.
     ctr_raw = data.get("ctr")
     if ctr_raw not in (None, ""):
-        try:
-            ctr = int(str(ctr_raw), 16)
-        except ValueError:
-            raise ApiError(400, "bad_ctr", "Contador inválido")
+        decoder = DECODERS.get(tag.get("codeScheme", DEFAULT_SCHEME))
+        if decoder is None:
+            raise ApiError(503, "scheme_unavailable", "Esta etiqueta usa un esquema de código no disponible")
+        ctr = decoder(str(ctr_raw))
+        if ctr is None:
+            raise ApiError(400, "bad_ctr", "Código de toque inválido")
         try:
             TABLE.update_item(
                 Key={"pk": f"TAG#{tag_id}", "sk": "TAG"},
@@ -186,13 +188,17 @@ def _put_med(pid, data, created_at=None):
         raise ApiError(400, "bad_window", "windowMin debe estar entre 1 y 240")
     mid = _short_id()
     tag_id = str(data.get("tagId") or f"toma-{mid}")
+    scheme = data.get("codeScheme", DEFAULT_SCHEME)
+    if scheme not in DECODERS:
+        raise ApiError(400, "bad_scheme", f"codeScheme debe ser uno de: {', '.join(sorted(DECODERS))}")
     item = {
         "pk": f"PATIENT#{pid}", "sk": f"MED#{mid}", "medId": mid, "name": name,
         "dose": data.get("dose", ""), "notes": data.get("notes", ""), "times": times,
         "windowMin": window, "tagId": tag_id, "createdAt": created_at or now_mx().isoformat(),
     }
     TABLE.put_item(Item=item)
-    TABLE.put_item(Item={"pk": f"TAG#{tag_id}", "sk": "TAG", "tagId": tag_id, "patientId": pid, "medId": mid})
+    TABLE.put_item(Item={"pk": f"TAG#{tag_id}", "sk": "TAG", "tagId": tag_id, "patientId": pid,
+                         "medId": mid, "codeScheme": scheme})
     return item
 
 
