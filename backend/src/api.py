@@ -364,7 +364,7 @@ def seed_demo(event):
         "caregiverName": data.get("caregiverName", "Laura (hija)"), "caregiverContact": data.get("caregiverContact", ""),
         "createdAt": (now - timedelta(days=7)).isoformat(),
     })
-    missed_in = max(5, min(int(data.get("missedInSeconds", 15)), 25))
+    missed_in = max(5, min(int(data.get("missedInSeconds", 5)), 25))
     due_at = now + timedelta(seconds=missed_in)
     near = now.strftime("%H:%M")
     created_at = (now - timedelta(minutes=5)).isoformat()
