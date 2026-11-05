@@ -7,7 +7,11 @@ lleva una etiqueta NFC: el paciente acerca su celular, sin instalar ninguna app,
 registrada. Si una dosis se olvida o se intenta tomar dos veces, el familiar recibe un aviso. Una
 foto de la receta se convierte en horarios automáticamente.
 
-Proyecto del equipo **sudo rm-rf /** para AWS Student Day 2026.
+🥇 **Primer lugar** en el hackathon *Build for Good* del
+[AWS Student Community Day México CDMX 2026](https://studentcommunitydaymexico.com/en)
+(IPN, 4 de noviembre de 2026), organizado por los AWS Student Builder Groups con el patrocinio de AWS.
+
+Proyecto del equipo **sudo rm-rf /**.
 
 ## Demo en vivo
 
